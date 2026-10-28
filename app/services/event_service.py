@@ -4,6 +4,7 @@ from app.core.pagination import decode_cursor, encode_cursor
 from app.models.common import Page
 from app.models.event import EventCreate, EventRead, EventStatus, EventUpdate, validate_event_shape
 from app.repositories.event_repo import EventRepository
+from app.core.text import normalize_city
 
 LOCKED_AFTER_DRAFT = {"capacity", "ticket_tiers"}
 
@@ -24,7 +25,8 @@ class EventService:
     async def list_page(self, *, city, status, starts_from, starts_to, q, limit, cursor) -> Page[EventRead]:
         filters: dict = {}
         if city:
-            filters["venue.city"] = city
+            # filters["venue.city"] = city
+            filters["city_key"] = normalize_city(city)
         if status:
             filters["status"] = status
         date_range = {}

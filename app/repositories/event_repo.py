@@ -3,6 +3,7 @@ from bson import ObjectId
 from pymongo import ReturnDocument
 from pymongo.asynchronous.database import AsyncDatabase
 from app.repositories.common import to_out
+from app.core.text import normalize_city
 
 
 class EventRepository:
@@ -14,6 +15,7 @@ class EventRepository:
         doc = {
             **data,
             "organizer_id": ObjectId(data["organizer_id"]),
+            "city_key": normalize_city(data["venue"]["city"]),
             "ticket_tiers": [{**t, "remaining": t["quota"]} for t in data["ticket_tiers"]],
             "status": "draft", "version": 1, "created_at": now, "updated_at": now,
         }
@@ -35,7 +37,16 @@ class EventRepository:
         cursor = self.col.find(query).sort([("starts_at", 1), ("_id", 1)]).limit(limit)
         return [to_out(d) async for d in cursor]
 
+    # async def update_versioned(self, event_id: str, version: int, changes: dict) -> dict | None:
+    #     return to_out(await self.col.find_one_and_update(
+    #         {"_id": ObjectId(event_id), "version": version},
+    #         {"$set": {**changes, "updated_at": datetime.now(UTC)}, "$inc": {"version": 1}},
+    #         return_document=ReturnDocument.AFTER,
+    #     ))
+    
     async def update_versioned(self, event_id: str, version: int, changes: dict) -> dict | None:
+        if "venue" in changes:                                        # ← new
+            changes = {**changes, "city_key": normalize_city(changes["venue"]["city"])}
         return to_out(await self.col.find_one_and_update(
             {"_id": ObjectId(event_id), "version": version},
             {"$set": {**changes, "updated_at": datetime.now(UTC)}, "$inc": {"version": 1}},
