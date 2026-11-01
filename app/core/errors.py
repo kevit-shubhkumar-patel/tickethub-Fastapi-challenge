@@ -9,9 +9,8 @@ logger = logging.getLogger("tickethub")
 
 
 class AppError(Exception):
-    def __init__(self, status_code: int, code: str, message: str):
-        self.status_code, self.code, self.message = status_code, code, message
-
+    def __init__(self, status_code: int, code: str, message: str, headers: dict | None = None):
+        self.status_code, self.code, self.message, self.headers = status_code, code, message, headers
 
 class NotFound(AppError):
     def __init__(self, what: str = "Resource"):
@@ -28,7 +27,7 @@ def _body(code: str, message: str, details=None) -> dict:
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppError)
     async def _app_error(_: Request, exc: AppError):
-        return JSONResponse(_body(exc.code, exc.message), status_code=exc.status_code)
+        return JSONResponse(_body(exc.code, exc.message), status_code=exc.status_code, headers=exc.headers)
 
     @app.exception_handler(RequestValidationError)
     async def _validation(_: Request, exc: RequestValidationError):

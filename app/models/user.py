@@ -32,6 +32,11 @@ class UserUpdate(BaseModel):
                 raise ValueError(f"{f} cannot be null")
         return self
 
+class UserRegister(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    email: EmailStr
+    name: str = Field(min_length=1, max_length=100)
+    password: str = Field(min_length=12, max_length=128)
 
 class UserRead(BaseModel):
     id: str

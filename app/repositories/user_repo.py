@@ -15,6 +15,9 @@ class UserRepository:
     def __init__(self, db: AsyncDatabase):
         self.col = db["users"]
 
+    async def get_by_email(self, email: str) -> dict | None:
+        return to_out(await self.col.find_one({"email": email}))
+
     async def insert(self, data: dict) -> dict:
         now = datetime.now(UTC)
         doc = {**data, "is_active": True, "created_at": now, "updated_at": now}

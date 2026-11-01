@@ -7,7 +7,7 @@ from app.core.middleware import RequestIDMiddleware
 from app.db import client as db
 from app.db.indexes import create_indexes
 from app.routers import users,bookings,events
-
+from app.routers import auth, bookings, events, users
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -23,6 +23,7 @@ register_error_handlers(app)
 app.include_router(users.router)
 app.include_router(bookings.router)
 app.include_router(events.router)
+app.include_router(auth.router)
 
 
 

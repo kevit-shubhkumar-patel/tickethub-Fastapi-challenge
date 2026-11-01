@@ -8,5 +8,8 @@ class Settings(BaseSettings):
     redis_url: str
     cors_origins: str = "http://localhost:3000"
     hold_minutes: int = 15
+    jwt_secret: str
+    access_token_minutes: int = 15
+    refresh_token_days: int = 7
 
 settings = Settings()

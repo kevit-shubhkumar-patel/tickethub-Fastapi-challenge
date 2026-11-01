@@ -1,9 +1,10 @@
+from fastapi.concurrency import run_in_threadpool
 from pymongo.errors import DuplicateKeyError
 from app.core.errors import AppError, NotFound
 from app.models.common import Page
-from app.models.user import UserCreate, UserRead, UserUpdate
+from app.models.user import UserCreate, UserRead, UserUpdate,UserRegister,Role
 from app.repositories.user_repo import UserRepository
-
+from app.core.security import hash_password
 
 class UserService:
     def __init__(self, repo: UserRepository):
@@ -40,3 +41,16 @@ class UserService:
     async def delete(self, user_id: str) -> None:
         if not await self.repo.update(user_id, {"is_active": False}):
             raise NotFound("User")
+
+    async def register(self, data: UserRegister) -> UserRead:
+        payload = {
+            "email": data.email.lower(),
+            "name": data.name,
+            "role": Role.attendee,                       # forced, never from the client
+            "password_hash": await run_in_threadpool(hash_password, data.password),
+        }
+        try:
+            doc = await self.repo.insert(payload)
+        except DuplicateKeyError:
+            raise AppError(409, "EMAIL_TAKEN", "A user with this email already exists")
+        return UserRead(**doc)
